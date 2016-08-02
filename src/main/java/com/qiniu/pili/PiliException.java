@@ -1,30 +1,37 @@
 package com.qiniu.pili;
 
 import okhttp3.Response;
+import com.google.gson.Gson;
 
 public class PiliException extends Exception {
-    public final Response response;
-    private final String ErrNotFound = "not found";
-    private final String ErrDuplicate = "already exists";
-    private final String ErrNotLive = "stream isn't in live";
+    private String message;
+    private  int code;
 
 
     public PiliException(Response response) {
-        this.response = response;
+        try {
+            ErrorResp err = new Gson().fromJson(response.body().string(), ErrorResp.class);
+            this.message = err.error;
+            this.code = response.code();
+        } catch (Exception e) {
+            e.printStackTrace();
+            this.message = null;
+            this.code = 0;
+        }
     }
 
     public PiliException(String msg) {
         super(msg);
-        response = null;
+        this.message = msg;
     }
 
     public PiliException(Exception e) {
         super(e);
-        this.response = null;
+        this.message= null;
     }
 
     public int code() {
-        return response == null ? -1 : response.code();
+        return code == 0 ? -1 : code;
     }
 
     public boolean isDuplicate() {
@@ -40,20 +47,11 @@ public class PiliException extends Exception {
     }
 
     public String getMessage() {
-        if (response == null) {
-            return super.getMessage();
-        } else {
-            switch (code()) {
-                case 614:
-                    return ErrDuplicate;
-                case 612:
-                    return ErrNotFound;
-                case 619:
-                    return ErrNotLive;
-                default:
-                    return response.message();
-            }
-        }
+        return message;
+    }
+
+    class ErrorResp {
+        String error;
     }
 
 }
