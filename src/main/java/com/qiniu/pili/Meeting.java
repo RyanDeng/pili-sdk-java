@@ -90,7 +90,7 @@ public class Meeting {
             this.roomName = roomName;
             this.userId = userId;
             this.perm = perm;
-            this.expireAt = expireAt.getTime() * 1000000;// nanoseconds
+            this.expireAt = expireAt.getTime() / 1000;// seconds
         }
     }
 

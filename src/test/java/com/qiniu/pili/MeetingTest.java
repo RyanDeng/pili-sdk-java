@@ -23,8 +23,8 @@ public class MeetingTest {
         // local test environment
 //        Config.APIHost = "10.200.20.28:7778";
 
-        accessKey = "2MU2YA8kPCU3OE5HHXD8crD27pqdmxfadsC82JY_";
-        secretKey = "Wsern1USY--isuzCaI4NEQS7xm43jvJBn3inaEAl";
+        accessKey = "7O7hf7Ld1RrC_fpZdFvU8aCgOPuhw2K4eapYOdII";
+        secretKey = "6Rq7rMSUHHqOgo0DJjh15tHsGUBEH9QhWqqyj4ka";
 
         cli = new Client(accessKey, secretKey);
         meeting = cli.newMeeting();
@@ -124,7 +124,7 @@ public class MeetingTest {
 
         try {
             String token = meeting.roomToken("room1", "123", "admin", new Date(1785600000000L));
-            assertEquals("2MU2YA8kPCU3OE5HHXD8crD27pqdmxfadsC82JY_:XGrkuJ00WYmEuobYVkyfT1uItjo=:eyJyb29tX25hbWUiOiJyb29tMSIsInVzZXJfaWQiOiIxMjMiLCJwZXJtIjoiYWRtaW4iLCJleHBpcmVfYXQiOjE3ODU2MDAwMDAwMDAwMDAwMDB9",
+            assertEquals("7O7hf7Ld1RrC_fpZdFvU8aCgOPuhw2K4eapYOdII:jltpX6P42j2fH3ErOp7Zj7RyaeE=:eyJyb29tX25hbWUiOiJyb29tMSIsInVzZXJfaWQiOiIxMjMiLCJwZXJtIjoiYWRtaW4iLCJleHBpcmVfYXQiOjE3ODU2MDAwMDB9",
                     token);
         } catch (Exception e) {
             fail();
