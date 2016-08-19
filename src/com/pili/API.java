@@ -1,9 +1,11 @@
 package com.pili;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.pili.Stream.*;
+import com.pili.Meeting.*;
 import com.pili.common.Config;
 import com.pili.common.MessageConfig;
 import com.pili.common.Utils;
@@ -23,6 +25,11 @@ public final class API {
             Configuration.getInstance().USE_HTTPS ? "https" : "http",
             Configuration.getInstance().API_HOST,
             Configuration.getInstance().API_VERSION);
+
+    private static final String RTC_BASE_URL = String.format("%s://%s/%s",
+            Configuration.getInstance().USE_HTTPS ? "https" : "http",
+            Configuration.getInstance().RTC_HOST,
+            Configuration.getInstance().RTC_VERSION);
 
     private static final OkHttpClient mOkHttpClient = new OkHttpClient();
 
@@ -580,5 +587,122 @@ public final class API {
             throw new PiliException(e);
         }
         return String.format("%s://%s%s&token=%s", scheme, stream.getPublishRtmpHost(), baseUri, publishToken);
+    }
+
+    //----------------------------rtc
+    public static String createRoom(Credentials credentials, CreateArgs args) throws PiliException {
+        if (args.ownerId == null) {
+            throw new PiliException(MessageConfig.ILLEGAL_OWNER_ID);
+        }
+        Gson gson = new Gson();
+
+        String json = gson.toJson(args);
+        String urlStr = String.format("%s/rooms", RTC_BASE_URL);
+        Response response = null;
+        try {
+            byte[] body = json.toString().getBytes(Config.UTF8);
+            URL url = new URL(urlStr);
+
+            String contentType = "application/json";
+            String macToken = credentials.signRequest(url, "POST", body, contentType);
+            MediaType type = MediaType.parse(contentType);
+            RequestBody rBody = RequestBody.create(type, body);
+            Request request = new Request.Builder()
+                    .post(rBody)
+                    .url(url)
+                    .header("User-Agent", Utils.getUserAgent())
+                    .addHeader("Authorization", macToken)
+                    .build();
+
+            response = mOkHttpClient.newCall(request).execute();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new PiliException(e);
+        }
+
+        // response never be null
+        if (response.isSuccessful()) {
+            try {
+                RoomName ret = gson.fromJson(response.body().string(), RoomName.class);
+                return ret.roomName;
+            } catch (IOException e) {
+                e.printStackTrace();
+                throw new PiliException(e);
+            }
+        } else {
+            throw new PiliException(response);
+        }
+    }
+
+    public static Room getRoom(Credentials credentials, String room) throws PiliException {
+        if (room == null) {
+            throw new PiliException(MessageConfig.ILLEGAL_ROOM);
+        }
+        Gson gson = new Gson();
+
+        String urlStr = String.format("%s/rooms/%s", RTC_BASE_URL, room);
+        Response response = null;
+        try {
+            URL url = new URL(urlStr);
+
+            String macToken = credentials.signRequest(url, "GET", null, null);
+            Request request = new Request.Builder()
+                    .url(url)
+                    .get()
+                    .header("User-Agent", Utils.getUserAgent())
+                    .addHeader("Authorization", macToken)
+                    .build();
+
+            response = mOkHttpClient.newCall(request).execute();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new PiliException(e);
+        }
+
+        // response never be null
+        if (response.isSuccessful()) {
+            try {
+                Room ret = gson.fromJson(response.body().string(), Room.class);
+                return ret;
+            } catch (IOException e) {
+                e.printStackTrace();
+                throw new PiliException(e);
+            }
+        } else {
+            throw new PiliException(response);
+        }
+    }
+
+    public static void deleteRoom(Credentials credentials, String room) throws PiliException {
+        if (room == null) {
+            throw new PiliException(MessageConfig.ILLEGAL_ROOM);
+        }
+        Gson gson = new Gson();
+
+        String urlStr = String.format("%s/rooms/%s", RTC_BASE_URL, room);
+        Response response = null;
+        try {
+            URL url = new URL(urlStr);
+
+            String macToken = credentials.signRequest(url, "DELETE", null, null);
+            Request request = new Request.Builder()
+                    .url(url)
+                    .delete()
+                    .header("User-Agent", Utils.getUserAgent())
+                    .addHeader("Authorization", macToken)
+                    .build();
+
+            response = mOkHttpClient.newCall(request).execute();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new PiliException(e);
+        }
+
+        // response never be null
+        if (response.isSuccessful()) {
+            return;
+        } else {
+            throw new PiliException(response);
+        }
     }
 }
